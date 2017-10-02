@@ -1,6 +1,5 @@
 library(httr)
 library(jsonlite)
-library(googleAuthR)
 library(googlesheets)
 library(reshape2)
 library(scales)
@@ -10,11 +9,11 @@ token <- gs_auth() #create the token to authorize Google drive
 google_chart <- function(file_id) {
   url <- paste("https://www.googleapis.com/drive/v2/files/", file_id, "/revisions", sep = "") #create the url
   api_data <- GET(url, config(token = token))  #get the data
-  revisions <- content(api_data)
-  revisions <- fromJSON(toJSON(revisions$items))
+  revisions <- content(api_data) #cleanly render the JSON
+  revisions <- fromJSON(toJSON(revisions$items)) #create a data frame from the JSON
   revisions <- revisions[, c(6, 9)] #get the relevant columns date and author
-  revisions$lastModifyingUserName <- gsub("anonymous", "NA", revisions$lastModifyingUserName)
-  revisions$lastModifyingUserName <- as.factor(unlist(revisions$lastModifyingUserName)) 
+  revisions$lastModifyingUserName <- gsub("NULL", "anonymous", revisions$lastModifyingUserName) #replace "null" entries with anonymous
+  revisions$lastModifyingUserName <- as.factor(unlist(revisions$lastModifyingUserName)) #convert to a factor variable to use with ggplot
   
   #clean up the date formatting
   revisions_times <- colsplit(unlist(revisions$modifiedDate), "T", names = c('Day', 'Time'))
