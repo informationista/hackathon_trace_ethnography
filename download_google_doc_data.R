@@ -30,7 +30,8 @@ google_data <- function(file_id) {
   revisions <- revisions[-1, ]
   
   revisions$data_source <- as.character("Google Doc Revisions")
-  
+  revisions <- revisions[, 2:5]
+  names(revisions)[1] <- "user"
   
   ggplot(revisions, aes(day, time, color = lastModifyingUserName)) + geom_point() + scale_x_datetime(breaks = date_breaks("1 day"), labels=date_format("%b %d")) + scale_y_datetime(breaks = date_breaks("2 hours"), labels = date_format("%H:%M")) + theme(axis.text.x=element_text(angle=45), panel.background = element_rect(fill = "white"))
   
