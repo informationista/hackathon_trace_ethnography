@@ -7,13 +7,12 @@ library(ggplot2)
 library(scales)
 
 
-api_token <- #get an API token for the relevant channel from https://api.slack.com/custom-integrations/legacy-tokens
-
-team_ids <- slackr_channels(api_token = api_token) #first get the team names from the workspace
-team_ids <- fromJSON(toJSON(team_ids)) #create a data frame to be able to get a team ID if you have its name
+api_token <- #insert token obtained from https://api.slack.com/custom-integrations/legacy-tokens
 
 slack_history <- function(team_name) {
   #first get the data!
+  team_ids <- slackr_channels(api_token = api_token) #first get the team names from the workspace
+  team_ids <- fromJSON(toJSON(team_ids)) #create a data frame to be able to get a team ID if you have its name
   index <- which(team_ids$name == team_name) #find the row number of the desired team
   team_id <- team_ids$id[index] #get its id number
   url <- paste("https://slack.com/api/channels.history?token=", api_token, "&channel=", team_id, "&count=1000", sep="") #create the post url
@@ -27,7 +26,8 @@ slack_history <- function(team_name) {
   messages$ts <- anytime(as.numeric(unlist(messages$ts))) #convert time stamp from UNIX epoch time to POSIXct item
   message_times <- colsplit(unlist(messages$ts), " ", names = c('day', 'time')) #split the time into day and time
   messages <- cbind(messages, message_times)
-    
+  
+  
   #convert to POSIXct and fix time zones
   messages$day <- as.POSIXct(messages$day, format = "%Y-%m-%d")
   messages$time <- as.POSIXct(messages$time, format = "%H:%M:%S")
@@ -41,12 +41,19 @@ slack_history <- function(team_name) {
   users$real_name <- unlist(users$real_name) #get out the names
   users <- data.frame(users$real_name, users$id)
   messages <- merge(messages, users, by.x = "user", by.y = "users.id")
-  
+    
   messages$data_source <- "Slack Channel Messages"
   
-  ggplot(messages, aes(day, time, color = user)) + geom_point() + scale_x_datetime(breaks = date_breaks("1 day"), labels=date_format("%b %d")) + scale_y_datetime(breaks = date_breaks("2 hours"), labels = date_format("%H:%M")) + theme(axis.text.x=element_text(angle=45), panel.background = element_rect(fill = "white"))
+  #format for consistency with other data sources
+  messages <- messages[, c(6, 4:5, 7)]
+  names(messages)[1] <- "user"
   
   return(messages)
  
   
 }
+
+
+
+
+
