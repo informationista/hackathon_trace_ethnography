@@ -1,59 +1,40 @@
-library(slackr)
 library(httr)
 library(jsonlite)
-library(anytime)
+library(googlesheets)
 library(reshape2)
-library(ggplot2)
 library(scales)
 
+token <- gs_auth() #create the token to authorize Google drive
 
-api_token <- #insert token obtained from https://api.slack.com/custom-integrations/legacy-tokens
-
-slack_history <- function(team_name) {
-  #first get the data!
-  team_ids <- slackr_channels(api_token = api_token) #first get the team names from the workspace
-  team_ids <- fromJSON(toJSON(team_ids)) #create a data frame to be able to get a team ID if you have its name
-  index <- which(team_ids$name == team_name) #find the row number of the desired team
-  team_id <- team_ids$id[index] #get its id number
-  url <- paste("https://slack.com/api/channels.history?token=", api_token, "&channel=", team_id, "&count=1000", sep="") #create the post url
-  message_JSON <- POST(url) #retrieve the data
-  messages <- fromJSON(toJSON(content(message_JSON))) #extract the data
-  messages <- messages$messages #create a df out of the desired data
-  messages <- messages[, 2:4] #just keep the vars of interest
+google_data <- function(file_id) {
+  url <- paste("https://www.googleapis.com/drive/v2/files/", file_id, "/revisions", sep = "") #create the url
+  api_data <- GET(url, config(token = token))  #get the data
+  revisions <- content(api_data)
+  revisions <- fromJSON(toJSON(revisions$items))
+  revisions <- revisions[, c(6, 9)] #get the relevant columns date and author
+  revisions$lastModifyingUserName <- gsub("NULL", "anonymous", revisions$lastModifyingUserName)
+  revisions$lastModifyingUserName <- as.factor(unlist(revisions$lastModifyingUserName))
   
-  #clean up the data
-  messages$user <- as.factor(unlist(messages$user)) 
-  messages$ts <- anytime(as.numeric(unlist(messages$ts))) #convert time stamp from UNIX epoch time to POSIXct item
-  message_times <- colsplit(unlist(messages$ts), " ", names = c('day', 'time')) #split the time into day and time
-  messages <- cbind(messages, message_times)
   
+  #clean up the date formatting
+  revisions_times <- colsplit(unlist(revisions$modifiedDate), "T", names = c('day', 'time'))
+  revisions <- cbind(revisions, revisions_times)
+  revisions$time <- gsub("Z", "", revisions$time)
   
   #convert to POSIXct and fix time zones
-  messages$day <- as.POSIXct(messages$day, format = "%Y-%m-%d")
-  messages$time <- as.POSIXct(messages$time, format = "%H:%M:%S")
+  revisions$day <- as.POSIXct(revisions$day, format = "%Y-%m-%d")
+  revisions$time <- as.POSIXct(revisions$time, format = "%H:%M:%S", tz = "GMT")
+  revisions$time <- as.POSIXct(format(revisions$time, tz = "America/New_York", usetz = TRUE))
   
-  #get the user names to pair up with the IDs 
-  url <- paste("https://slack.com/api/users.list?token=", api_token, sep="") #create the post url
-  users_JSON <- POST(url) #retrieve the data
-  users <- fromJSON(toJSON(content(users_JSON))) #extract the JSON
-  users <- users$members #make the users data frame
-  users$id <- unlist(users$id) #get out the ids
-  users$real_name <- unlist(users$real_name) #get out the names
-  users <- data.frame(users$real_name, users$id)
-  messages <- merge(messages, users, by.x = "user", by.y = "users.id")
-    
-  messages$data_source <- "Slack Channel Messages"
+  #remove the outlier where the hackathon organizer created the document
+  revisions <- revisions[-1, ]
+  
+  revisions$data_source <- as.character("Google Doc Revisions")
   
   #format for consistency with other data sources
-  messages <- messages[, c(6, 4:5, 7)]
-  names(messages)[1] <- "user"
+  revisions <- revisions[, 2:5]
+  names(revisions)[1] <- "user"
   
-  return(messages)
- 
   
+  return(revisions)
 }
-
-
-
-
-
