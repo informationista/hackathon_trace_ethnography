@@ -1,11 +1,21 @@
-##This script downloads the repo data from Github and makes a chart of when commits were made over time
-
 library(jsonlite)
 library(httpuv)
 library(httr)
 library(plyr)
 library(ggplot2)
 library(scales)
+
+
+myapp <- oauth_app(appname = "hackathon_trace_ethnography",
+                   key = "825be7a0e95ce87af376",
+                   secret = "60b12e8ba730b7f2e3251d20feba5021742f8e25")
+
+# Get OAuth credentials
+github_token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+
+# Use API
+gtoken <- config(token = github_token)
+
 
 #This requires getting a token - I did this using the instructions at https://medium.com/towards-data-science/accessing-data-from-github-api-using-r-3633fb62cb08
 #Get list of relevant repos from the NCBI-Hackathons organization
@@ -42,6 +52,10 @@ github_retriever <- function(repo_name){
   commit_df$data_source <- as.character("Github Repo Commits")
   #make the chart
   ggplot(commit_df, aes(day, time, color = name)) + geom_point() + scale_x_datetime("", breaks = date_breaks("1 day"), labels = date_format("%b%d")) + scale_y_datetime("", breaks= date_breaks("2 hours"), labels = date_format("%I:%M%p", tz = "America/New_York"))
+  
+  commit_df <- commit_df[, c(1, 4:6)]
+  
+  names(commit_df)[1] <- "user"
   
   return(commit_df)
 }
