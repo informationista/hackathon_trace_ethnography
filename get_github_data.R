@@ -6,17 +6,6 @@ library(ggplot2)
 library(scales)
 
 
-myapp <- oauth_app(appname = "hackathon_trace_ethnography",
-                   key = "825be7a0e95ce87af376",
-                   secret = "60b12e8ba730b7f2e3251d20feba5021742f8e25")
-
-# Get OAuth credentials
-github_token <- oauth2.0_token(oauth_endpoints("github"), myapp)
-
-# Use API
-gtoken <- config(token = github_token)
-
-
 #This requires getting a token - I did this using the instructions at https://medium.com/towards-data-science/accessing-data-from-github-api-using-r-3633fb62cb08
 #Get list of relevant repos from the NCBI-Hackathons organization
 repos_list <- GET("https://api.github.com/orgs/NCBI-Hackathons/repos", gtoken)
