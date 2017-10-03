@@ -24,7 +24,7 @@ repo_df1$commits_url <- as.character(repo_df$commits_url)
 
 
 #Here is a function that will do all the getting of data and making of charts. But this only works if there are no more than 100 commits
-chart_maker <- function(repo_name){
+github_retriever <- function(repo_name){
   url <- paste("https://api.github.com/repos/NCBI-Hackathons/", repo_name, "/commits?page=1&per_page=100", sep="") #creates the url to retrieve the data
   commit_history <- GET(url, gtoken) #gets the data
   commit_times <- fromJSON(toJSON(content(commit_history))) #convert from JSON 
@@ -38,6 +38,10 @@ chart_maker <- function(repo_name){
   commit_df$time <- as.POSIXct(commit_df$time, format="%H:%M", tz="Etc/GMT") #convert times to POSIX
   commit_df$time <- as.POSIXct(format(commit_df$time, tz = "America/New_York", usetz=TRUE)) #convert to correct time zone
   commit_df$day <- as.POSIXct(commit_df$day,format="%Y-%m-%d") #convert dates to POSIX
+  
+  commit_df$data_source <- as.character("Github Repo Commits")
   #make the chart
   ggplot(commit_df, aes(day, time, color = name)) + geom_point() + scale_x_datetime("", breaks = date_breaks("1 day"), labels = date_format("%b%d")) + scale_y_datetime("", breaks= date_breaks("2 hours"), labels = date_format("%I:%M%p", tz = "America/New_York"))
+  
+  return(commit_df)
 }
