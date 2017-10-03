@@ -3,17 +3,10 @@
 library(ggplot2)
 library(scales)
 
-#get the relevant data
-slack <- slack_history("robots") #insert slack team name
-gdocs <- google_data("1sFZPDZAHGddMs8crqhxiQiEDIWHAp6pRHTKsG41nZ3g") #insert a document id
-github <- github_retriever("GenomicRobots") #insert a github repo name
-
-#get everything named the same way and with the same columns
-gdocs <- gdocs[, 2:5]
-slack <- slack[, c(1, 4:6)]
-github <- github[, c(1, 4:6)]
-names(gdocs)[1] <- "user"
-names(github)[1] <- "user"
+#get and combine relevant data
+slack <- slack_history() #insert slack team name
+gdocs <- google_data() #insert a document id
+github <- github_retriever() #insert a github repo name
 combo_data <- rbind(gdocs, slack, github)
 
 
