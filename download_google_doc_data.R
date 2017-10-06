@@ -11,9 +11,8 @@ google_data <- function(file_id) {
   api_data <- GET(url, config(token = token))  #get the data
   revisions <- content(api_data)
   revisions <- fromJSON(toJSON(revisions$items))
-  revisions <- revisions[, c(6, 9)] #get the relevant columns date and author
   revisions$lastModifyingUserName <- gsub("NULL", "anonymous", revisions$lastModifyingUserName)
-  revisions$lastModifyingUserName <- as.factor(unlist(revisions$lastModifyingUserName))
+  revisions$user <- as.factor(unlist(revisions$lastModifyingUserName))
   
   
   #clean up the date formatting
@@ -26,14 +25,13 @@ google_data <- function(file_id) {
   revisions$time <- as.POSIXct(revisions$time, format = "%H:%M:%S", tz = "GMT")
   revisions$time <- as.POSIXct(format(revisions$time, tz = "America/New_York", usetz = TRUE))
   
+
+  
   #remove the outlier where the hackathon organizer created the document
   revisions <- revisions[-1, ]
+  revisions <- data.frame(user = revisions$user, day = revisions$day, time = revisions$time, data_source = as.character("Google Doc Revisions"))
   
-  revisions$data_source <- as.character("Google Doc Revisions")
-  revisions <- revisions[, 2:5]
-  names(revisions)[1] <- "user"
-  
-  ggplot(revisions, aes(day, time, color = lastModifyingUserName)) + geom_point() + scale_x_datetime(breaks = date_breaks("1 day"), labels=date_format("%b %d")) + scale_y_datetime(breaks = date_breaks("2 hours"), labels = date_format("%H:%M")) + theme(axis.text.x=element_text(angle=45), panel.background = element_rect(fill = "white"))
+  ggplot(revisions, aes(day, time, color = user)) + geom_point() + scale_x_datetime(breaks = date_breaks("1 day"), labels=date_format("%b %d")) + scale_y_datetime(breaks = date_breaks("2 hours"), labels = date_format("%H:%M")) + theme(axis.text.x=element_text(angle=45), panel.background = element_rect(fill = "white"))
   
   return(revisions)
 }
