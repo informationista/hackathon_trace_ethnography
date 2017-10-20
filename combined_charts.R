@@ -1,4 +1,4 @@
-#this script makes one chart with all three data source charts on it
+#this script makes one chart with all three data source charts on it.  It takes as input a data frame with the slack channel name, slack workspace token, github repo name, and google doc for each team.
 
 library(ggplot2)
 library(scales)
@@ -13,20 +13,14 @@ get_hack_data <- function(slack_name, slack_token, gdoc_id, gh_repo) {
   #return(combo_data)
 }
 
-dat <- read.csv(file ="Desktop/test.csv")
-three_hacks_dat <- mapply(get_hack_data, dat$slack.channel.name, dat$gdoc.id, dat$repo.name, SIMPLIFY = FALSE) #this returns a list of ggplot items
 
-new_dat[[1]]$data$user #this contains the user names so theoretically could be edited to fix the names
+#once the data are all set the names need to be disambiguated and de-identified.  At this point I really see no way of doing this except manually. Then it can be charted.
 
+##this is a function that will draw the plots. It takes as input the data frame, plus the start and end date of the hackathon in yyyy-mm-dd format.  This assumes you are charting the data on the same day you downloaded it - things won't look right otherwise.
+make_trace_plots <- function(df, start_date, end_date) {
+  lims <- as.POSIXct(strptime(c(paste(Sys.Date()-1, "20:00"),(paste(Sys.Date(), "24:00"))), format = "%Y-%m-%d %H:%M"))
+  
+  p <- ggplot(df, aes(day, time, color = user))  + geom_point(size = 1) + scale_x_datetime(breaks = date_breaks("3 days"), labels=date_format("%b %d")) + scale_y_datetime(limits = lims, breaks = date_breaks("3 hours"), labels = date_format("%H:%M")) + theme(axis.text.x=element_text(angle=90, margin = margin(t = 5, r = 0, b = 0, l = 0)), panel.background = element_rect(fill = "white")) + annotate("rect", ymin = as.POSIXct(paste(Sys.Date()-1, "20:00")), ymax = as.POSIXct(paste(Sys.Date(), "24:00")), xmax = as.POSIXct(paste(start_date, "00:00:00")), xmin = as.POSIXct(paste(end_date, "04:00:00")), fill = "grey", alpha = 0.3) + facet_wrap(~data_source, nrow = 3) 
+  return(p)
 
-#once the data are all set the names need to be disambiguated and de-identified
-
-#set up the y axis limits. I don't love how this looks.  Needs some work.
-
-
-
-#for now let's do the charting separately so the data can be cleaned up
-
-p <- ggplot(combo_data, aes(day, time, color = user))  + geom_point(size = 1) + scale_x_datetime(breaks = date_breaks("2 days"), labels=date_format("%b %d")) + scale_y_datetime(limits = lims, breaks = date_breaks("3 hours"), labels = date_format("%H:%M")) + theme(axis.text.x=element_text(angle=45), panel.background = element_rect(fill = "white")) + annotate("rect", ymin = as.POSIXct("2017-10-04 00:00:00"), ymax = as.POSIXct("2017-10-04 24:00:00"), xmax = as.POSIXct("2017-08-14 00:00:00"), xmin = as.POSIXct("2017-08-16 04:00:00"), fill = "grey", alpha = 0.3) + facet_wrap(~data_source, nrow = 3) + ggtitle(gh_repo)
-return(p)
-lims <- as.POSIXct(strptime(c("2017-10-04 00:00","2017-10-04 24:00"), format = "%Y-%m-%d %H:%M")) 
+}
