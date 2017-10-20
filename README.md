@@ -3,7 +3,10 @@
 Research on hackathons using "traces" or artifacts of the development and documentation process.  
 
 ## What is this thing?
-I am, among other things, a PhD student in information science, and I research scientific hackathons.  This repo contains code used to create visual representations of hackathon communication in the form of Slack channels, Github Repos, and Google Docs.  In this project, I am looking at different patterns of communication among teams and whether these have an impact on outcomes and outputs of the hackathon.
+I am, among other things, a PhD student in information science, and I research scientific hackathons.  This repo contains code used to create visual representations of hackathon communication in the form of Slack channels, Github Repos, and Google Docs.  In this project, I am looking at different patterns of communication among teams and whether these have an impact on outcomes and outputs of the hackathon.  Here is an example of the chart I have created to do this.
+
+![example chart](https://github.com/informationista/hackathon_trace_ethnography/blob/master/example_plot.png "Example Chart")
+
 
 ## Why should I use it?
 Probably you shouldn't.  I can't imagine this has any usefulness for any one other than me, but I've been learning about pipelines and Github and Git at hackathons so I thought it would be fun and interesting to put my code here.  Also, working on this was a lot more interesting than working on my lit review.
